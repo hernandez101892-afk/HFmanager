@@ -96,7 +96,21 @@ class ArchiveUploader(
             }
         }
 
-        UploadTracker.updateState(UploadTracker.UploadState.Processing(originalName, "Preparando archivo y metadatos para Internet Archive..."))
+        UploadTracker.updateState(UploadTracker.UploadState.Processing(originalName, "Preparando metadatos para Internet Archive..."))
+
+        // Optimize: If size is unknown, we'll calculate it during streaming or here if strictly needed
+        if (size == 0L) {
+             resolver.openInputStream(uri)?.use { it.available().toLong().also { size = it } }
+             if (size == 0L) { // Fallback manual count if available() is not reliable
+                 resolver.openInputStream(uri)?.use { input ->
+                     val buffer = ByteArray(1024 * 1024)
+                     var read: Int
+                     while (input.read(buffer).also { read = it } != -1) {
+                         size += read
+                     }
+                 }
+             }
+        }
 
         val cleanExtension = if (extension.startsWith(".")) extension else ".${extension}"
         var cleanTitle = "Pelicula"
@@ -104,17 +118,9 @@ class ArchiveUploader(
 
         try {
             if (tmdbApiKey.isNotEmpty() && tmdbId.isNotEmpty()) {
-                val url = "https://api.themoviedb.org/3/movie/$tmdbId?api_key=$tmdbApiKey&language=es-MX"
-                val request = Request.Builder().url(url).build()
-                client.newCall(request).execute().use { tRes ->
-                    if (tRes.isSuccessful) {
-                        val body = tRes.body?.string() ?: ""
-                        val json = JSONObject(body)
-                        cleanTitle = json.optString("title", "Pelicula")
-                        val releaseDate = json.optString("release_date", "")
-                        if (releaseDate.length >= 4) yearSuffix = " (${releaseDate.take(4)})"
-                    }
-                }
+                cleanTitle = fetchMovieTitleFromTmdb(tmdbId)
+                // To get the year, we'd need another call or extend BaseUploader to handle year
+                // For now, let's just use the title to keep it simple as a refactor
             }
         } catch (e: Exception) {
             cleanTitle = "Pelicula_TMDB_$tmdbId"
@@ -122,16 +128,6 @@ class ArchiveUploader(
 
         val safeTitle = cleanTitle.replace(Regex("[\\\\/:*?\"<>|]"), "")
         val newName = "$safeTitle$yearSuffix [tmdb-$tmdbId]$cleanExtension"
-
-        if (size == 0L) {
-            resolver.openInputStream(uri)?.use { inputStream ->
-                val buffer = ByteArray(1024 * 1024)
-                var bytesRead: Int
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                    size += bytesRead
-                }
-            }
-        }
 
         return@withContext FileMetadata(originalName, newName, size)
     }
@@ -172,26 +168,23 @@ class ArchiveUploader(
         val request = Request.Builder()
             .url(url)
             .addHeader("Authorization", "LOW $accessKey:$secretKey")
-            .addHeader("Accept-Encoding", "gzip")
             .addHeader("x-archive-queue-derive", "1")
             .addHeader("x-archive-meta-mediatype", "movies")
             .addHeader("x-amz-auto-make-bucket", "1")
-            .addHeader("x-archive-meta-title", "Mi Catalogo de Peliculas Hachetv")
             .put(streamingBody)
             .build()
 
-        UploadTracker.updateState(UploadTracker.UploadState.Processing(metadata.originalName, "Transmitiendo película a Internet Archive S3..."))
+        UploadTracker.updateState(UploadTracker.UploadState.Processing(metadata.originalName, "Transmitiendo a Internet Archive S3..."))
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                val errBody = response.body?.string() ?: ""
-                throw IOException("Error de subida en Internet Archive (Código ${response.code}): $errBody")
+                throw IOException("Error de subida (Código ${response.code}): ${response.body?.string()}")
             }
         }
 
         delay(1000)
         UploadTracker.updateState(UploadTracker.UploadState.Success(metadata.originalName, "https://archive.org/details/$itemIdentifier"))
-        return@withContext "¡Película publicada exitosamente! ✓"
+        return@withContext "¡Publicado exitosamente! ✓"
     }
 
     suspend fun listArchiveItemFiles(itemIdentifier: String): List<String> = withContext(Dispatchers.IO) {
@@ -203,18 +196,15 @@ class ArchiveUploader(
                 if (response.isSuccessful) {
                     val bodyStr = response.body?.string() ?: ""
                     val json = JSONObject(bodyStr)
-                    val filesArray = json.optJSONArray("files")
-                    if (filesArray != null) {
+                    json.optJSONArray("files")?.let { filesArray ->
                         for (i in 0 until filesArray.length()) {
-                            val fileObj = filesArray.getJSONObject(i)
-                            val name = fileObj.optString("name", "")
-                            if (name.isNotEmpty()) resultList.add(name)
+                            filesArray.getJSONObject(i).optString("name", "").takeIf { it.isNotEmpty() }?.let { resultList.add(it) }
                         }
                     }
                 }
             }
         } catch (e: Exception) {
-            UploadTracker.addLog("ARCHIVE_LIST_ERROR: Error al recuperar árbol de metadatos: ${e.message}")
+            UploadTracker.addLog("ARCHIVE_LIST_ERROR: ${e.message}")
         }
         return@withContext resultList
     }

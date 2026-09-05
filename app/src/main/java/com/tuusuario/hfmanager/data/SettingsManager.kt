@@ -8,7 +8,7 @@ import android.util.Log
 import com.tuusuario.hfmanager.BuildConfig
 
 class SettingsManager(context: Context) {
-    private val TAG = "SettingsManager"
+    private val tag = "SettingsManager"
     private var prefs = createEncryptedPrefs(context)
 
     /**
@@ -27,10 +27,10 @@ class SettingsManager(context: Context) {
                 "hf_secure_prefs",
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             ) as EncryptedSharedPreferences
         } catch (e: Exception) {
-            Log.e(TAG, "💥 Error de descifrado en Keystore. Reconstruyendo preferencias...", e)
+            Log.e(tag, "💥 Error de descifrado en Keystore. Reconstruyendo preferencias...", e)
             try {
                 // Borrar el archivo XML corrupto físicamente
                 context.deleteSharedPreferences("hf_secure_prefs")
@@ -48,7 +48,7 @@ class SettingsManager(context: Context) {
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
                 ) as EncryptedSharedPreferences
             } catch (fatalException: Exception) {
-                Log.e(TAG, "🚨 Error crítico irrecuperable de Keystore", fatalException)
+                Log.e(tag, "🚨 Error crítico irrecuperable de Keystore", fatalException)
                 throw fatalException
             }
         }
@@ -71,7 +71,7 @@ class SettingsManager(context: Context) {
         if (getToken().isEmpty() && BuildConfig.IA_ACCESS_KEY.isNotEmpty()) {
             saveToken(BuildConfig.IA_ACCESS_KEY)
         }
-        if ((getTargetRepoType().isEmpty() || getTargetRepoType() == "dataset") && BuildConfig.IA_SECRET_KEY.isNotEmpty()) {
+        if ((getTargetRepoType().isEmpty() || (getTargetRepoType() == "dataset")) && BuildConfig.IA_SECRET_KEY.isNotEmpty()) {
             saveTargetRepoType(BuildConfig.IA_SECRET_KEY)
         }
         if (getTargetRepo().isEmpty() && BuildConfig.IA_ITEM_ID.isNotEmpty()) {
