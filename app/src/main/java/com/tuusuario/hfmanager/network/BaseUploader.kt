@@ -46,6 +46,11 @@ abstract class BaseUploader(
         val patternSimple = java.util.regex.Pattern.compile("tmdb_(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE)
         val matcherSimple = patternSimple.matcher(nameWithoutExt)
         if (matcherSimple.find()) return matcherSimple.group(1) ?: ""
+        
+        // Fallback: Cualquier secuencia de 5 a 8 dígitos (IDs típicos de TMDB)
+        val patternFallback = java.util.regex.Pattern.compile("(\\d{5,8})")
+        val matcherFallback = patternFallback.matcher(nameWithoutExt)
+        if (matcherFallback.find()) return matcherFallback.group(1) ?: ""
 
         return ""
     }
