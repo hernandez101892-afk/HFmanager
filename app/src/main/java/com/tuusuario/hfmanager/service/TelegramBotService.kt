@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
@@ -186,7 +185,7 @@ class TelegramBotService : Service() {
         ).apply {
             description = "Mantiene el bot de Telegram activo en segundo plano para procesar tus subidas"
         }
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
     }
 
@@ -249,11 +248,12 @@ class TelegramBotService : Service() {
                 val url = "https://api.telegram.org/bot$botToken/getUpdates?offset=${lastUpdateId + 1}&timeout=30"
                 val request = Request.Builder().url(url).build()
 
-                val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    val body = response.body?.string()
-                    if (body != null) {
-                        parseTelegramUpdates(body)
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val body = response.body?.string()
+                        if (body != null) {
+                            parseTelegramUpdates(body)
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -295,9 +295,17 @@ class TelegramBotService : Service() {
      * Procesador de Comandos del Controlador Remoto de Telegram
      */
     private fun handleTelegramCommand(chatId: String, text: String) {
-        val args = text.split(" ")
-        val command = args[0].lowercase()
-        UploadTracker.addLog("TELEGRAM: Comando recibido: '$text' de chat $chatId")
+        val trimmedText = text.trim()
+        if (trimmedText.isEmpty()) return
+        
+        val args = trimmedText.split(Regex("\\s+"))
+        val command = if (args[0].lowercase().contains("@")) {
+            args[0].lowercase().substringBefore("@")
+        } else {
+            args[0].lowercase()
+        }
+        
+        UploadTracker.addLog("TELEGRAM: Comando recibido: '$trimmedText' de chat $chatId")
 
         when (command) {
             "/start", "/help" -> {
@@ -306,19 +314,19 @@ class TelegramBotService : Service() {
                     Controla remotamente tu celular y tus datasets sin necesidad de una computadora.
 
                     📌 *Comandos Disponibles:*
-                    ⚡ /status - Estado del celular (RAM, batería, colas).
-                    ⚙️ /config - Mostrar repositorio y almacenamiento configurado.
-                    📁 /list - Listar archivos listos en la carpeta de tu celular.
-                    🔄 /upload <ext> [id_o_busqueda] - Inteligente: busca local por nombre o ID TMDB, limpia, asocia, renombra físicamente en local y sube.
-                    🔄 /sync <ext> - Sincronizacion dual: valida existencia en IA y HF, renombra localmente y sube lo faltante a la nube correspondiente.
-                    📺 /m3u - Genera lista IPTV M3U unificada de IA y HF con posters de TMDB, la guarda en Hugging Face y te da el enlace RAW.
-                    🛑 /cancel - Cancelar la subida asíncrona que esté activa.
-                    📝 /rename <id_incorrecto> <id_correcto> - Corrige un ID de película incorrecto remotamente y en local.
-                    🔧 /repair - Auditoría completa: identifica, renombra local y repara subidas incompletas sin re-subir gigabytes.
-                    📦 /repos - Listar todos tus repositorios en el Hub.
-                    🆕 /create <tipo> <nombre> [privado: true/false] - Crea un nuevo repositorio (dataset, model, space) en el Hub.
-                    🎯 /select <tipo> <repo_id> - Selecciona al instante el repositorio y tipo de sincronización activo en tu celular de forma remota.
-                    🗑️ /delete <archivo> - Borrar un archivo remoto del Dataset.
+                    ⚡ `/status` - Estado del celular (RAM, batería, colas).
+                    ⚙️ `/config` - Mostrar repositorio y almacenamiento configurado.
+                    📁 `/list` - Listar archivos listos en la carpeta de tu celular.
+                    🔄 `/upload <ext> [id_o_busqueda]` - Inteligente: busca local por nombre o ID TMDB, limpia, asocia, renombra físicamente en local y sube.
+                    🔄 `/sync <ext>` - Sincronizacion dual: valida existencia en IA y HF, renombra localmente y sube lo faltante a la nube correspondiente.
+                    📺 `/m3u` - Genera lista IPTV M3U unificada de IA y HF con posters de TMDB, la guarda en Hugging Face y te da el enlace RAW.
+                    🛑 `/cancel` - Cancelar la subida asíncrona que esté activa.
+                    📝 `/rename <id_incorrecto> <id_correcto>` - Corrige un ID de película incorrecto remotamente y en local.
+                    🔧 `/repair` - Auditoría completa: identifica, renombra local y repara subidas incompletas sin re-subir gigabytes.
+                    📦 `/repos` - Listar todos tus repositorios en el Hub.
+                    🆕 `/create <tipo> <nombre> [privado: true/false]` - Crea un nuevo repositorio (dataset, model, space) en el Hub.
+                    🎯 `/select <tipo> <repo_id>` - Selecciona al instante el repositorio y tipo de sincronización activo en tu celular de forma remota.
+                    🗑️ `/delete <archivo>` - Borrar un archivo remoto del Dataset.
                 """.trimIndent()
                 sendTelegramMessage(chatId, helpText)
                 UploadTracker.addLog("TELEGRAM: Respondiendo ayuda /help")
@@ -474,6 +482,7 @@ class TelegramBotService : Service() {
                                 } else {
                                     sendTelegramMessage(chatId, "❌ Error al crear repositorio (${response.code}): $bodyStr")
                                 }
+                                response.close()
                             }
                         })
                     } catch (e: Exception) {
@@ -551,6 +560,7 @@ class TelegramBotService : Service() {
                                     repoList.append("• `$id` ($type) $privateIcon\\n")
                                 }
                                 sendTelegramMessage(chatId, repoList.toString())
+                                response.close()
                             }
                         })
                     } catch (e: Exception) {
@@ -614,6 +624,7 @@ class TelegramBotService : Service() {
                                 } else {
                                     sendTelegramMessage(chatId, "❌ Error al eliminar archivo (${response.code}): ${response.body?.string()}")
                                 }
+                                response.close()
                             }
                         })
                     } catch (e: Exception) {
@@ -667,15 +678,11 @@ class TelegramBotService : Service() {
                                     return
                                 }
                                 val filesArray = JSONArray(bodyStr)
-                                var foundFile: JSONObject? = null
+                                val items = mutableListOf<JSONObject>()
                                 for (j in 0 until filesArray.length()) {
-                                    val fileObj = filesArray.getJSONObject(j)
-                                    val path = fileObj.getString("path")
-                                    if (path.contains("tmdb_${idIncorrecto}_")) {
-                                        foundFile = fileObj
-                                        break
-                                    }
+                                    items.add(filesArray.getJSONObject(j))
                                 }
+                                val foundFile = items.find { it.getString("path").contains("tmdb_${idIncorrecto}_") }
 
                                 if (foundFile == null) {
                                     sendTelegramMessage(chatId, "❌ No encontré ningún archivo en Hugging Face que corresponda al ID incorrecto `$idIncorrecto`.")
@@ -745,12 +752,12 @@ class TelegramBotService : Service() {
                                             UploadTracker.addLog("SUCCESS: Archivo renombrado remotamente de '$pathInRepo' a '$newPath'")
 
                                             // 3. Renombrado Local Físico opcional en el celular si el archivo está guardado localmente
-                                            val folderUriStr = settings.getTargetFolderUri()
-                                            if (folderUriStr.isNotEmpty()) {
-                                                val folderUri = folderUriStr.toUri()
-                                                val documentFile = DocumentFile.fromTreeUri(applicationContext, folderUri)
-                                                if (documentFile != null && documentFile.exists()) {
-                                                    val localTargetFile = documentFile.listFiles()
+                                            val folderUriStrLocal = settings.getTargetFolderUri()
+                                            if (folderUriStrLocal.isNotEmpty()) {
+                                                val folderUriLocal = folderUriStrLocal.toUri()
+                                                val documentFileLocal = DocumentFile.fromTreeUri(applicationContext, folderUriLocal)
+                                                if (documentFileLocal != null && documentFileLocal.exists()) {
+                                                    val localTargetFile = documentFileLocal.listFiles()
                                                         .firstOrNull { it.name?.contains("tmdb_${idIncorrecto}_") == true }
                                                     if (localTargetFile != null) {
                                                         val oldLocalName = localTargetFile.name ?: ""
@@ -920,7 +927,7 @@ class TelegramBotService : Service() {
                             • Reparados (Commit enviado en 2s): $repairedCount
                             • Errores o no identificados: $errors
                             
-                            ${if (errors > 0 || repairedCount > 0) summaryList.toString() else "_¡Tus 13 películas están perfectamente sincronizadas e indexadas en Hugging Face! ✓_"}
+                            ${if (errors > 0 || repairedCount > 0) summaryList.toString() else "_¡Tus películas están perfectamente sincronizadas e indexadas en Hugging Face! ✓_"}
                         """.trimIndent()
 
                         sendTelegramMessage(chatId, finalReport)
@@ -1024,7 +1031,7 @@ class TelegramBotService : Service() {
                                     val cleanedName = getArchiveUploader().cleanMovieName(oldName)
                                     try {
                                         tmdbId = getArchiveUploader().fetchMovieIdFromTmdb(cleanedName)
-                                    } catch (e: Exception) {}
+                                    } catch (_: Exception) {}
                                 }
 
                                 if (tmdbId.isEmpty()) {
@@ -1157,7 +1164,7 @@ class TelegramBotService : Service() {
 
                         // 3. Identificar todas las peliculas unicas por TMDB ID
                         val uniqueMovies = mutableMapOf<String, MovieEntry>()
-                        val movieRegexIa = java.util.regex.Pattern.compile("\\[tmdb-(\\d+)\\]")
+                        val movieRegexIa = java.util.regex.Pattern.compile("\\[tmdb-(\\d+)]")
                         val movieRegexHf = java.util.regex.Pattern.compile("tmdb_(\\d+)_")
 
                         // Procesar archivos de Internet Archive
@@ -1628,7 +1635,10 @@ class TelegramBotService : Service() {
                         if (now - lastProgressNotificationTime > 8000) {
                             lastProgressNotificationTime = now
                             val pct = (bytesWritten * 100) / totalBytes
-                            val progressText = "📡 [1/2] Progreso de subida (Internet Archive): *$pct%* de `${iaMetadata.newName}`"
+                            val speedText = UploadTracker.currentState.value.let { 
+                                if (it is UploadTracker.UploadState.Uploading && it.speed.isNotEmpty()) " [${it.speed}]" else ""
+                            }
+                            val progressText = "📡 [1/2] Progreso de subida (Internet Archive): *$pct%*$speedText de `${iaMetadata.newName}`"
                             updateNotification("Subiendo a IA: $pct% completado...")
 
                             serviceScope.launch {
@@ -1683,7 +1693,10 @@ class TelegramBotService : Service() {
                             if (now - lastProgressNotificationTime > 8000) {
                                 lastProgressNotificationTime = now
                                 val pct = (bytesWritten * 100) / totalBytes
-                                val progressText = "📡 [2/2] Sincronizando respaldo (Hugging Face): *$pct%* de `${hfMetadata.newName}`"
+                                val speedText = UploadTracker.currentState.value.let { 
+                                    if (it is UploadTracker.UploadState.Uploading && it.speed.isNotEmpty()) " [${it.speed}]" else ""
+                                }
+                                val progressText = "📡 [2/2] Sincronizando respaldo (Hugging Face): *$pct%*$speedText de `${hfMetadata.newName}`"
                                 updateNotification("Sincronizando a HF: $pct% completado...")
 
                                 serviceScope.launch {
@@ -1837,4 +1850,3 @@ private data class MovieEntry(
     var iaFile: String? = null,
     var hfPath: String? = null
 )
-
