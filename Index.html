@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPTV & M3U Web Player</title>
+  <!-- Soporte para flujos HLS (.m3u8) y MP4 -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    :root {
+      --bg-dark: #121212;
+      --card-bg: #1f1f1f;
+      --card-hover: #2d2d2d;
+      --accent: #e50914;
+      --text-main: #ffffff;
+      --text-muted: #aaaaaa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      color: var(--accent);
+      margin-bottom: 5px;
+    }
+
+    /* Reproductor Principal */
+    .player-container {
+      max-width: 900px;
+      margin: 0 auto 25px auto;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    }
+
+    video {
+      width: 100%;
+      max-height: 500px;
+      display: block;
+      outline: none;
+    }
+
+    .now-playing {
+      padding: 12px 18px;
+      background: #181818;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .now-playing-title {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    /* Formulario de Carga */
+    .input-section {
+      max-width: 900px;
+      margin: 0 auto 20px auto;
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .input-section input[type="text"] {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: #121212;
+      color: #fff;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #b80710;
+    }
+
+    .btn-secondary {
+      background: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #444;
+    }
+
+    /* Buscador */
+    .search-bar {
+      max-width: 900px;
+      margin: 0 auto 20px auto;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: var(--card-bg);
+      color: #fff;
+      font-size: 1em;
+    }
+
+    /* Grilla de Contenido */
+    .grid-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .item-card {
+      background: var(--card-bg);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .item-card:hover {
+      background: var(--card-hover);
+      transform: translateY(-3px);
+    }
+
+    .item-poster {
+      width: 100%;
+      height: 120px;
+      object-fit: contain;
+      background: #121212;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+
+    .item-title {
+      font-size: 0.95em;
+      font-weight: 600;
+      margin-bottom: 6px;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item-group {
+      font-size: 0.75em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .card-actions .btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 0.8em;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-download {
+      background: #28a745;
+    }
+
+    .btn-download:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>ðŸŽ¬ Reproductor IPTV & M3U</h1>
+    <p style="color: var(--text-muted)">CatÃ¡logo de pelÃ­culas precargado automÃ¡ticamente.</p>
+  </div>
+
+  <!-- SecciÃ³n del Reproductor -->
+  <div class="player-container" id="playerContainer">
+    <video id="videoPlayer" controls></video>
+    <div class="now-playing">
+      <span class="now-playing-title" id="currentTitle">Selecciona una pelÃ­cula para iniciar la reproducciÃ³n</span>
+    </div>
+  </div>
+
+  <!-- Carga de Lista (URL Precargada) -->
+  <div class="input-section">
+    <input type="text" id="m3uUrl" value="https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u" placeholder="Pega la URL de tu lista .m3u o .m3u8 aquÃ­...">
+    <button class="btn" onclick="loadFromUrl()">Recargar URL</button>
+    <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt" style="display:none" onchange="loadFromFile(event)">
+    <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Subir Archivo</button>
+  </div>
+
+  <!-- Barra de BÃºsqueda -->
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="ðŸ” Buscar pelÃ­cula o categorÃ­a..." oninput="filterItems()">
+  </div>
+
+  <!-- Grilla de PelÃ­culas -->
+  <div class="grid-container" id="playlistGrid">
+    <p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">
+      Cargando catÃ¡logo automÃ¡ticamente...
+    </p>
+  </div>
+
+  <script>
+    let parsedItems = [];
+    let hlsInstance = null;
+
+    // Parser de listas M3U
+    function parseM3U(content) {
+      const lines = content.split('\n');
+      const items = [];
+      let currentItem = null;
+
+      const metadataRegex = /#EXTINF:-1(?:\s+tvg-id="([^"]*)")?(?:\s+tvg-name="([^"]*)")?(?:\s+tvg-logo="([^"]*)")?(?:\s+group-title="([^"]*)")?,(.*)/i;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (line.startsWith('#EXTINF')) {
+          const match = line.match(metadataRegex);
+          if (match) {
+            currentItem = {
+              id: match[1] || '',
+              name: match[5] || match[2] || 'Sin tÃ­tulo',
+              logo: match[3] || '',
+              group: match[4] || 'PelÃ­culas',
+              url: ''
+            };
+          } else {
+            const nameParts = line.split(',');
+            currentItem = {
+              id: '',
+              name: nameParts.length > 1 ? nameParts[1] : 'Sin tÃ­tulo',
+              logo: '',
+              group: 'PelÃ­culas',
+              url: ''
+            };
+          }
+        } else if (line.length > 0 && !line.startsWith('#')) {
+          if (currentItem) {
+            currentItem.url = line;
+            items.push(currentItem);
+            currentItem = null;
+          }
+        }
+      }
+      return items;
+    }
+
+    // Cargar desde URL
+    async function loadFromUrl() {
+      const url = document.getElementById('m3uUrl').value.trim();
+      if (!url) return alert('Por favor ingresa una URL vÃ¡lida.');
+
+      const container = document.getElementById('playlistGrid');
+      container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Cargando catÃ¡logo...</p>';
+
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
+        parsedItems = parseM3U(text);
+        renderGrid(parsedItems);
+      } catch (err) {
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--accent);">Error al cargar la lista desde la URL. Verifica la conexiÃ³n o polÃ­ticas CORS.</p>';
+      }
+    }
+
+    // Cargar desde archivo local
+    function loadFromFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        parsedItems = parseM3U(e.target.result);
+        renderGrid(parsedItems);
+      };
+      reader.readAsText(file);
+    }
+
+    // Renderizar grilla de elementos
+    function renderGrid(items) {
+      const container = document.getElementById('playlistGrid');
+      container.innerHTML = '';
+
+      if (items.length === 0) {
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No se encontraron contenidos vÃ¡lidos.</p>';
+        return;
+      }
+
+      items.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+
+        const logoSrc = item.logo || 'https://via.placeholder.com/200x120/1e1e1e/ffffff?text=Pelicula';
+
+        card.innerHTML = `
+          <div>
+            <img class="item-poster" src="${logoSrc}" onerror="this.src='https://via.placeholder.com/200x120/1e1e1e/ffffff?text=Pelicula'" alt="${item.name}">
+            <div class="item-title" title="${item.name}">${item.name}</div>
+            <div class="item-group">${item.group}</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn" onclick="playMedia('${encodeURIComponent(item.url)}', '${encodeURIComponent(item.name)}')">â–¶ Ver</button>
+            <a href="${item.url}" target="_blank" download class="btn btn-download">â¬‡ Descargar</a>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Filtrar la lista
+    function filterItems() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = parsedItems.filter(item => 
+        item.name.toLowerCase().includes(query) || item.group.toLowerCase().includes(query)
+      );
+      renderGrid(filtered);
+    }
+
+    // Reproducir Video
+    function playMedia(encodedUrl, encodedName) {
+      const url = decodeURIComponent(encodedUrl);
+      const name = decodeURIComponent(encodedName);
+      const video = document.getElementById('videoPlayer');
+      const titleLabel = document.getElementById('currentTitle');
+
+      titleLabel.textContent = name;
+
+      // Desplazar suavemente hacia el reproductor
+      document.getElementById('playerContainer').scrollIntoView({ behavior: 'smooth' });
+
+      if (Hls.isSupported() && (url.includes('.m3u8') || !url.includes('.mp4'))) {
+        if (hlsInstance) hlsInstance.destroy();
+        hlsInstance = new Hls();
+        hlsInstance.loadSource(url);
+        hlsInstance.attachMedia(video);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+          video.play();
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', function() {
+          video.play();
+        });
+      } else {
+        video.src = url;
+        video.play();
+      }
+    }
+
+    // Carga automÃ¡tica inmediata al abrir la pÃ¡gina
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromUrl();
+    });
+  </script>
+</body>
+</html>
