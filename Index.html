@@ -201,35 +201,35 @@
 <body>
 
   <div class="header">
-    <h1>ðŸŽ¬ Reproductor IPTV & M3U</h1>
-    <p style="color: var(--text-muted)">CatÃ¡logo de pelÃ­culas precargado automÃ¡ticamente.</p>
+    <h1>🎬 Reproductor IPTV & M3U</h1>
+    <p style="color: var(--text-muted)">Catálogo de películas precargado automáticamente.</p>
   </div>
 
-  <!-- SecciÃ³n del Reproductor -->
+  <!-- Sección del Reproductor -->
   <div class="player-container" id="playerContainer">
     <video id="videoPlayer" controls></video>
     <div class="now-playing">
-      <span class="now-playing-title" id="currentTitle">Selecciona una pelÃ­cula para iniciar la reproducciÃ³n</span>
+      <span class="now-playing-title" id="currentTitle">Selecciona una película para iniciar la reproducción</span>
     </div>
   </div>
 
   <!-- Carga de Lista (URL Precargada) -->
   <div class="input-section">
-    <input type="text" id="m3uUrl" value="https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u" placeholder="Pega la URL de tu lista .m3u o .m3u8 aquÃ­...">
+    <input type="text" id="m3uUrl" value="https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u" placeholder="Pega la URL de tu lista .m3u o .m3u8 aquí...">
     <button class="btn" onclick="loadFromUrl()">Recargar URL</button>
     <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt" style="display:none" onchange="loadFromFile(event)">
     <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Subir Archivo</button>
   </div>
 
-  <!-- Barra de BÃºsqueda -->
+  <!-- Barra de Búsqueda -->
   <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="ðŸ” Buscar pelÃ­cula o categorÃ­a..." oninput="filterItems()">
+    <input type="text" id="searchInput" placeholder="🔍 Buscar película o categoría..." oninput="filterItems()">
   </div>
 
-  <!-- Grilla de PelÃ­culas -->
+  <!-- Grilla de Películas -->
   <div class="grid-container" id="playlistGrid">
     <p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">
-      Cargando catÃ¡logo automÃ¡ticamente...
+      Cargando catálogo automáticamente...
     </p>
   </div>
 
@@ -253,18 +253,18 @@
           if (match) {
             currentItem = {
               id: match[1] || '',
-              name: match[5] || match[2] || 'Sin tÃ­tulo',
+              name: match[5] || match[2] || 'Sin título',
               logo: match[3] || '',
-              group: match[4] || 'PelÃ­culas',
+              group: match[4] || 'Películas',
               url: ''
             };
           } else {
             const nameParts = line.split(',');
             currentItem = {
               id: '',
-              name: nameParts.length > 1 ? nameParts[1] : 'Sin tÃ­tulo',
+              name: nameParts.length > 1 ? nameParts[1] : 'Sin título',
               logo: '',
-              group: 'PelÃ­culas',
+              group: 'Películas',
               url: ''
             };
           }
@@ -282,10 +282,10 @@
     // Cargar desde URL
     async function loadFromUrl() {
       const url = document.getElementById('m3uUrl').value.trim();
-      if (!url) return alert('Por favor ingresa una URL vÃ¡lida.');
+      if (!url) return alert('Por favor ingresa una URL válida.');
 
       const container = document.getElementById('playlistGrid');
-      container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Cargando catÃ¡logo...</p>';
+      container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Cargando catálogo...</p>';
 
       try {
         const response = await fetch(url);
@@ -293,7 +293,7 @@
         parsedItems = parseM3U(text);
         renderGrid(parsedItems);
       } catch (err) {
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--accent);">Error al cargar la lista desde la URL. Verifica la conexiÃ³n o polÃ­ticas CORS.</p>';
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--accent);">Error al cargar la lista desde la URL. Verifica la conexión o políticas CORS.</p>';
       }
     }
 
@@ -316,7 +316,7 @@
       container.innerHTML = '';
 
       if (items.length === 0) {
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No se encontraron contenidos vÃ¡lidos.</p>';
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No se encontraron contenidos válidos.</p>';
         return;
       }
 
@@ -333,8 +333,8 @@
             <div class="item-group">${item.group}</div>
           </div>
           <div class="card-actions">
-            <button class="btn" onclick="playMedia('${encodeURIComponent(item.url)}', '${encodeURIComponent(item.name)}')">â–¶ Ver</button>
-            <a href="${item.url}" target="_blank" download class="btn btn-download">â¬‡ Descargar</a>
+            <button class="btn" onclick="playMedia('${encodeURIComponent(item.url)}', '${encodeURIComponent(item.name)}')">▶ Ver</button>
+            <a href="${item.url}" target="_blank" download class="btn btn-download">⬇ Descargar</a>
           </div>
         `;
         container.appendChild(card);
@@ -381,7 +381,7 @@
       }
     }
 
-    // Carga automÃ¡tica inmediata al abrir la pÃ¡gina
+    // Carga automática inmediata al abrir la página
     window.addEventListener('DOMContentLoaded', () => {
       loadFromUrl();
     });
