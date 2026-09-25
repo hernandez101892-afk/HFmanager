@@ -2,12 +2,26 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Netflix IPTV Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Netflix IPTV Player - PWA</title>
+
+  <!-- PWA & Mobile Meta Tags -->
+  <meta name="theme-color" content="#E50914">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hachetv">
+  <meta name="description" content="Reproductor Web App de películas y listas M3U/M3U8.">
+
+  <!-- Favicon e Íconos App (SVG Data URIs) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23141414'/><path d='M25 20h15v60H25zm35 0h15v60H60zM40 20l20 60H45L25 20z' fill='%23E50914'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23141414'/><path d='M25 20h15v60H25zm35 0h15v60H60zM40 20l20 60H45L25 20z' fill='%23E50914'/></svg>">
+
   <!-- HLS.js para reproducción de flujos .m3u8 / .mp4 -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <!-- Google Fonts: Montserrat & Roboto -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --netflix-red: #E50914;
@@ -24,6 +38,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -40,12 +55,13 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.8) 70%, transparent 100%);
-      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(20,20,20,0.85) 70%, transparent 100%);
+      backdrop-filter: blur(12px);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 40px;
+      padding: 12px 40px;
+      gap: 15px;
     }
 
     .brand {
@@ -78,7 +94,39 @@
     .nav-controls {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Botón de Instalación PWA */
+    .pwa-install-btn {
+      background: linear-gradient(135deg, var(--netflix-red) 0%, #b80710 100%);
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(229, 9, 20, 0.4);
+      transition: all 0.25s ease;
+      animation: pulse 2s infinite;
+    }
+
+    .pwa-install-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(229, 9, 20, 0.6);
+      background: #ffffff;
+      color: var(--netflix-red);
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.5); }
+      70% { box-shadow: 0 0 0 10px rgba(229, 9, 20, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0); }
     }
 
     .search-box {
@@ -92,14 +140,14 @@
       padding: 8px 14px 8px 36px;
       border-radius: 20px;
       font-size: 0.85rem;
-      width: 220px;
+      width: 200px;
       transition: all 0.3s ease;
     }
 
     .search-box input:focus {
       outline: none;
       border-color: var(--netflix-red);
-      width: 280px;
+      width: 250px;
       background: #000;
     }
 
@@ -112,11 +160,38 @@
       color: var(--text-gray);
     }
 
+    /* Banner PWA de Aviso de Instalación */
+    .pwa-banner {
+      background: linear-gradient(90deg, #1f1f1f 0%, #291214 100%);
+      border-bottom: 1px solid var(--netflix-red);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #eee;
+    }
+
+    .pwa-banner-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pwa-banner-close {
+      background: transparent;
+      border: none;
+      color: #aaa;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0 8px;
+    }
+
     /* Hero Banner Principal */
     .hero-container {
       position: relative;
       width: 100%;
-      height: 420px;
+      height: 400px;
       background: #000;
       overflow: hidden;
       margin-bottom: 25px;
@@ -220,7 +295,7 @@
       object-fit: contain;
     }
 
-    /* Barra de Controles Personalizada para Avanzar / Retroceder */
+    /* Barra de Controles Personalizada */
     .custom-controls {
       background: #181818;
       padding: 12px 20px;
@@ -395,7 +470,7 @@
     .poster-wrapper {
       position: relative;
       width: 100%;
-      padding-top: 135%; /* Proporción elegante tipo póster */
+      padding-top: 135%;
       background: #0a0a0a;
       overflow: hidden;
     }
@@ -455,7 +530,7 @@
       text-overflow: ellipsis;
     }
 
-    /* Botones Sutiles y Compactos (No Gigantes) */
+    /* Botones Compactos */
     .card-buttons {
       display: flex;
       gap: 6px;
@@ -503,7 +578,7 @@
       border-color: #28a745;
     }
 
-    /* Modal / Formulario Colapsable de Fuentes */
+    /* Cuadro de Fuentes */
     .source-box {
       background: var(--card-bg);
       border: 1px solid var(--border-gray);
@@ -527,7 +602,7 @@
       font-size: 0.85rem;
     }
 
-    /* Mensajes y Carga */
+    /* Loading */
     .loading-state {
       grid-column: 1 / -1;
       text-align: center;
@@ -551,26 +626,42 @@
     }
 
     @media (max-width: 768px) {
-      .navbar { padding: 12px 16px; }
+      .navbar { padding: 10px 16px; }
       .hero-container { height: 320px; }
       .hero-title { font-size: 1.5rem; }
       .hero-overlay { padding: 20px; }
       .player-wrapper { margin-top: -30px; padding: 0 10px; }
       .movies-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-      .search-box input { width: 140px; }
-      .search-box input:focus { width: 180px; }
+      .search-box input { width: 130px; }
+      .search-box input:focus { width: 170px; }
     }
   </style>
 </head>
 <body>
 
+  <!-- Barra PWA de Aviso de Instalación -->
+  <div class="pwa-banner" id="pwaBanner" style="display: none;">
+    <div class="pwa-banner-content">
+      <span>📱 <strong>Instala la Web App de HacheTV</strong> para acceder directamente desde tu inicio.</span>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button class="pwa-install-btn" onclick="triggerPwaInstall()">📲 Instalar Ahora</button>
+      <button class="pwa-banner-close" onclick="closePwaBanner()">✕</button>
+    </div>
+  </div>
+
   <!-- Navegación Superior -->
   <nav class="navbar">
     <div class="brand">
-      <a href="#" class="brand-logo">NETFLIX</a>
-      <span class="brand-badge">IPTV OTT</span>
+      <a href="#" class="brand-logo">HacheTV</a>
+      <span class="brand-badge">PWA OTT</span>
     </div>
     <div class="nav-controls">
+      <!-- Botón de Instalación Directa PWA -->
+      <button class="pwa-install-btn" id="pwaInstallHeaderBtn" onclick="triggerPwaInstall()" style="display: none;">
+        📲 Instalar App
+      </button>
+
       <div class="search-box">
         <span class="search-icon">🔍</span>
         <input type="text" id="searchInput" placeholder="Buscar película..." oninput="filterMovies()">
@@ -578,13 +669,13 @@
     </div>
   </nav>
 
-  <!-- Hero Banner Principal (Destacado) -->
+  <!-- Hero Banner Principal -->
   <section class="hero-container" id="heroBanner">
     <img id="heroBackdrop" class="hero-backdrop" src="https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=1200" alt="Backdrop">
     <div class="hero-overlay">
       <div class="hero-content">
         <span class="hero-tag">PELÍCULA DESTACADA</span>
-        <h2 class="hero-title" id="heroTitle">Catálogo de Películas Netflix</h2>
+        <h2 class="hero-title" id="heroTitle">Catálogo de Películas</h2>
         <p class="hero-desc" id="heroDesc">Disfruta de cientos de títulos de alta calidad en formato MP4 / HLS con reproductor integrado y descarga directa.</p>
         <div class="hero-actions">
           <button class="ctrl-btn ctrl-btn-primary" id="heroPlayBtn" onclick="playCurrentHero()">
@@ -605,13 +696,12 @@
         <video id="videoPlayer" poster="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000"></video>
       </div>
 
-      <!-- Barra de Controles Avanzados (Avanzar/Retroceder) -->
+      <!-- Barra de Controles Avanzados -->
       <div class="custom-controls">
         <div class="control-group-left">
           <button class="ctrl-btn ctrl-btn-primary" onclick="togglePlayPause()" id="playPauseBtn">
             ▶ Reproducir
           </button>
-          <!-- Controles de Avanzar y Retroceder -->
           <button class="ctrl-btn" onclick="seekRelative(-10)" title="Retroceder 10 segundos">
             ⏪ -10s
           </button>
@@ -635,7 +725,7 @@
         </div>
       </div>
 
-      <!-- Barra Informativa del Contenido Actual -->
+      <!-- Barra Informativa -->
       <div class="now-playing-bar">
         <span class="playing-title" id="nowPlayingTitle">Selecciona una película para reproducir</span>
         <a id="directDownloadLink" class="btn-compact btn-download-sm" href="#" target="_blank" download style="display:none;">
@@ -648,7 +738,7 @@
   <!-- Contenedor Principal de Catálogo -->
   <div class="section-container">
 
-    <!-- Cuadro de Fuente M3U / M3U8 -->
+    <!-- Cuadro de Fuente M3U -->
     <div class="source-box">
       <span style="font-size:0.85rem; color:var(--text-gray); font-weight:600;">Fuente M3U:</span>
       <input type="text" id="m3uUrlInput" value="https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u">
@@ -675,8 +765,91 @@
 
   </div>
 
+  <!-- Script PWA e Inyección Dinámica de Manifest & Service Worker -->
   <script>
-    // Configuración y Variables de Estado
+    // Register PWA Manifest and ServiceWorker dynamically in single-file HTML
+    (function setupPWA() {
+      // 1. Inyectar Manifest Web App
+      const manifestObj = {
+        name: "Netflix IPTV Player",
+        short_name: "Netflix IPTV",
+        description: "Reproductor Web App de películas y listas M3U.",
+        start_url: "./",
+        display: "standalone",
+        orientation: "any",
+        background_color: "#141414",
+        theme_color: "#E50914",
+        icons: [
+          {
+            src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23141414'/><path d='M25 20h15v60H25zm35 0h15v60H60zM40 20l20 60H45L25 20z' fill='%23E50914'/></svg>",
+            sizes: "192x192 512x512",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+          }
+        ]
+      };
+
+      const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/json' });
+      const manifestUrl = URL.createObjectURL(manifestBlob);
+      const linkTag = document.createElement('link');
+      linkTag.rel = 'manifest';
+      linkTag.href = manifestUrl;
+      document.head.appendChild(linkTag);
+
+      // 2. Inyectar y Registrar Service Worker inline via Blob
+      if ('serviceWorker' in navigator) {
+        const swCode = `
+          const CACHE_NAME = 'netflix-iptv-v1';
+          self.addEventListener('install', (evt) => {
+            self.skipWaiting();
+          });
+          self.addEventListener('activate', (evt) => {
+            evt.waitUntil(clients.claim());
+          });
+          self.addEventListener('fetch', (evt) => {
+            // Estrategia Network-First con fallback a cache
+            evt.respondWith(
+              fetch(evt.request).catch(() => caches.match(evt.request))
+            );
+          });
+        `;
+        const swBlob = new Blob([swCode], { type: 'text/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Note:', err));
+      }
+    })();
+
+    // Lógica de Eventos de Instalación PWA (beforeinstallprompt)
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('pwaInstallHeaderBtn').style.display = 'inline-flex';
+      document.getElementById('pwaBanner').style.display = 'flex';
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('El usuario aceptó instalar la PWA');
+          }
+          deferredPrompt = null;
+          document.getElementById('pwaInstallHeaderBtn').style.display = 'none';
+          document.getElementById('pwaBanner').style.display = 'none';
+        });
+      } else {
+        alert('Para instalar en iOS (iPhone/iPad):\nToca el botón Compartir de Safari ➔ Selecciona "Agregar a inicio".\n\nEn Android/PC:\nUsa el menú del navegador ➔ "Instalar aplicación" o "Agregar a la pantalla principal".');
+      }
+    }
+
+    function closePwaBanner() {
+      document.getElementById('pwaBanner').style.display = 'none';
+    }
+
+    // Configuración General del Reproductor y Catálogo
     const DEFAULT_M3U = "https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u";
     let movies = [];
     let activeCategory = 'ALL';
@@ -791,7 +964,7 @@
       });
     }
 
-    // Renderizar Grilla de Películas (Botones Compactos y Elegantes)
+    // Renderizar Grilla de Películas
     function renderGrid(items) {
       const grid = document.getElementById('moviesGrid');
       grid.innerHTML = '';
@@ -859,7 +1032,6 @@
       downloadBtn.href = movie.url;
       downloadBtn.style.display = 'inline-flex';
 
-      // Desplazamiento suave al reproductor
       document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
 
       const url = movie.url;
@@ -881,7 +1053,7 @@
       playPauseBtn.textContent = '⏸ Pausa';
     }
 
-    // Controles de Reproductor (Avanzar y Retroceder)
+    // Controles de Reproductor (Avanzar / Retroceder)
     function togglePlayPause() {
       if (video.paused) {
         video.play();
@@ -955,7 +1127,7 @@
       renderGrid(filtered);
     }
 
-    // Carga Inicial Automática al Cargar la Página
+    // Carga Inicial Automática
     window.addEventListener('DOMContentLoaded', () => {
       loadM3uUrl();
     });
