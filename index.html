@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Netflix IPTV Player - PWA</title>
+  <title>HacheTV IPTV Player - PWA & CORS Unblocker</title>
 
   <!-- PWA & Mobile Meta Tags -->
   <meta name="theme-color" content="#E50914">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Hachetv">
-  <meta name="description" content="Reproductor Web App de películas y listas M3U/M3U8.">
+  <meta name="apple-mobile-web-app-title" content="HacheTV IPTV">
+  <meta name="description" content="Reproductor Web App de películas y listas M3U/M3U8 estilo HacheTV con desloqueador CORS automático.">
 
   <!-- Favicon e Íconos App (SVG Data URIs) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23141414'/><path d='M25 20h15v60H25zm35 0h15v60H60zM40 20l20 60H45L25 20z' fill='%23E50914'/></svg>">
@@ -24,8 +24,8 @@
 
   <style>
     :root {
-      --netflix-red: #E50914;
-      --netflix-dark-red: #B81D24;
+      --HacheTV-red: #E50914;
+      --HacheTV-dark-red: #B81D24;
       --bg-black: #141414;
       --card-bg: #1f1f1f;
       --card-hover: #2a2a2a;
@@ -50,7 +50,7 @@
       padding-bottom: 50px;
     }
 
-    /* Navbar Estilo Netflix */
+    /* Navbar Estilo HacheTV */
     .navbar {
       position: sticky;
       top: 0;
@@ -71,7 +71,7 @@
     }
 
     .brand-logo {
-      color: var(--netflix-red);
+      color: var(--HacheTV-red);
       font-family: 'Montserrat', sans-serif;
       font-weight: 800;
       font-size: 1.8rem;
@@ -82,8 +82,8 @@
 
     .brand-badge {
       background: rgba(229, 9, 20, 0.2);
-      color: var(--netflix-red);
-      border: 1px solid var(--netflix-red);
+      color: var(--HacheTV-red);
+      border: 1px solid var(--HacheTV-red);
       font-size: 0.65rem;
       font-weight: 700;
       padding: 2px 6px;
@@ -100,7 +100,7 @@
 
     /* Botón de Instalación PWA */
     .pwa-install-btn {
-      background: linear-gradient(135deg, var(--netflix-red) 0%, #b80710 100%);
+      background: linear-gradient(135deg, var(--HacheTV-red) 0%, #b80710 100%);
       color: #ffffff;
       border: none;
       padding: 8px 16px;
@@ -120,7 +120,7 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(229, 9, 20, 0.6);
       background: #ffffff;
-      color: var(--netflix-red);
+      color: var(--HacheTV-red);
     }
 
     @keyframes pulse {
@@ -146,7 +146,7 @@
 
     .search-box input:focus {
       outline: none;
-      border-color: var(--netflix-red);
+      border-color: var(--HacheTV-red);
       width: 250px;
       background: #000;
     }
@@ -163,7 +163,7 @@
     /* Banner PWA de Aviso de Instalación */
     .pwa-banner {
       background: linear-gradient(90deg, #1f1f1f 0%, #291214 100%);
-      border-bottom: 1px solid var(--netflix-red);
+      border-bottom: 1px solid var(--HacheTV-red);
       padding: 10px 20px;
       display: flex;
       justify-content: space-between;
@@ -227,7 +227,7 @@
 
     .hero-tag {
       display: inline-block;
-      background: var(--netflix-red);
+      background: var(--HacheTV-red);
       color: #fff;
       font-size: 0.7rem;
       font-weight: 700;
@@ -263,7 +263,7 @@
       gap: 12px;
     }
 
-    /* Reproductor de Video con Controles Personalizados */
+    /* Reproductor de Video con Controles Personalizados y CORS Proxy Banner */
     .player-wrapper {
       max-width: 1100px;
       margin: -60px auto 30px auto;
@@ -293,6 +293,20 @@
       height: 100%;
       display: block;
       object-fit: contain;
+    }
+
+    /* Notice Toast de Proxy CORS */
+    .proxy-status-toast {
+      background: rgba(229, 9, 20, 0.95);
+      color: #fff;
+      padding: 8px 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #ff4d4d;
     }
 
     /* Barra de Controles Personalizada */
@@ -329,18 +343,18 @@
     }
 
     .ctrl-btn:hover {
-      background: var(--netflix-red);
-      border-color: var(--netflix-red);
+      background: var(--HacheTV-red);
+      border-color: var(--HacheTV-red);
       color: #fff;
     }
 
     .ctrl-btn-primary {
-      background: var(--netflix-red);
-      border-color: var(--netflix-red);
+      background: var(--HacheTV-red);
+      border-color: var(--HacheTV-red);
     }
 
     .ctrl-btn-primary:hover {
-      background: var(--netflix-dark-red);
+      background: var(--HacheTV-dark-red);
     }
 
     .time-display {
@@ -363,7 +377,7 @@
       border-radius: 3px;
       outline: none;
       cursor: pointer;
-      accent-color: var(--netflix-red);
+      accent-color: var(--HacheTV-red);
     }
 
     .now-playing-bar {
@@ -373,6 +387,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .playing-title {
@@ -382,7 +398,19 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 70%;
+      max-width: 60%;
+    }
+
+    /* Selector de Proxy CORS */
+    .proxy-selector {
+      background: #1f1f1f;
+      color: #fff;
+      border: 1px solid var(--border-gray);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      outline: none;
+      cursor: pointer;
     }
 
     /* Categorías y Filtros */
@@ -399,7 +427,7 @@
       padding-bottom: 12px;
       margin-bottom: 20px;
       scrollbar-width: thin;
-      scrollbar-color: var(--netflix-red) var(--bg-black);
+      scrollbar-color: var(--HacheTV-red) var(--bg-black);
     }
 
     .pill {
@@ -416,9 +444,9 @@
     }
 
     .pill:hover, .pill.active {
-      background: var(--netflix-red);
+      background: var(--HacheTV-red);
       color: #fff;
-      border-color: var(--netflix-red);
+      border-color: var(--HacheTV-red);
     }
 
     .section-title {
@@ -436,7 +464,7 @@
       display: inline-block;
       width: 4px;
       height: 18px;
-      background: var(--netflix-red);
+      background: var(--HacheTV-red);
       border-radius: 2px;
     }
 
@@ -558,12 +586,12 @@
     }
 
     .btn-play-sm {
-      background: var(--netflix-red);
+      background: var(--HacheTV-red);
       color: #fff;
     }
 
     .btn-play-sm:hover {
-      background: var(--netflix-dark-red);
+      background: var(--HacheTV-dark-red);
     }
 
     .btn-download-sm {
@@ -612,7 +640,7 @@
 
     .spinner {
       border: 3px solid rgba(255,255,255,0.1);
-      border-top: 3px solid var(--netflix-red);
+      border-top: 3px solid var(--HacheTV-red);
       border-radius: 50%;
       width: 36px;
       height: 36px;
@@ -642,7 +670,7 @@
   <!-- Barra PWA de Aviso de Instalación -->
   <div class="pwa-banner" id="pwaBanner" style="display: none;">
     <div class="pwa-banner-content">
-      <span>📱 <strong>Instala la Web App de HacheTV</strong> para acceder directamente desde tu inicio.</span>
+      <span>📱 <strong>Instala la Web App de HacheTV IPTV</strong> para acceder directamente desde tu inicio.</span>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
       <button class="pwa-install-btn" onclick="triggerPwaInstall()">📲 Instalar Ahora</button>
@@ -657,7 +685,6 @@
       <span class="brand-badge">PWA OTT</span>
     </div>
     <div class="nav-controls">
-      <!-- Botón de Instalación Directa PWA -->
       <button class="pwa-install-btn" id="pwaInstallHeaderBtn" onclick="triggerPwaInstall()" style="display: none;">
         📲 Instalar App
       </button>
@@ -675,8 +702,8 @@
     <div class="hero-overlay">
       <div class="hero-content">
         <span class="hero-tag">PELÍCULA DESTACADA</span>
-        <h2 class="hero-title" id="heroTitle">Catálogo de Películas</h2>
-        <p class="hero-desc" id="heroDesc">Disfruta de cientos de títulos de alta calidad en formato MP4 / HLS con reproductor integrado y descarga directa.</p>
+        <h2 class="hero-title" id="heroTitle">Catálogo de Películas HacheTV</h2>
+        <p class="hero-desc" id="heroDesc">Disfruta de cientos de títulos con reproductor integrado, desloqueador CORS automático y enlace de descarga directa MP4.</p>
         <div class="hero-actions">
           <button class="ctrl-btn ctrl-btn-primary" id="heroPlayBtn" onclick="playCurrentHero()">
             ▶ Reproducción
@@ -692,6 +719,13 @@
   <!-- Reproductor de Video Integrado -->
   <div class="player-wrapper" id="playerSection">
     <div class="player-card">
+      
+      <!-- Toast de Estado de Proxy CORS -->
+      <div class="proxy-status-toast" id="proxyToast" style="display: none;">
+        <span id="proxyToastText">🌐 Intentando reproducción con Servidor Proxy...</span>
+        <button onclick="document.getElementById('proxyToast').style.display='none'" style="background:none; border:none; color:#fff; cursor:pointer;">✕</button>
+      </div>
+
       <div class="video-container">
         <video id="videoPlayer" poster="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000"></video>
       </div>
@@ -725,12 +759,22 @@
         </div>
       </div>
 
-      <!-- Barra Informativa -->
+      <!-- Barra Informativa con Selector de Proxy CORS -->
       <div class="now-playing-bar">
         <span class="playing-title" id="nowPlayingTitle">Selecciona una película para reproducir</span>
-        <a id="directDownloadLink" class="btn-compact btn-download-sm" href="#" target="_blank" download style="display:none;">
-          ⬇ Descargar MP4
-        </a>
+        
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <select class="proxy-selector" id="proxySelect" onchange="onProxySelectChange(this.value)" title="Servidor Proxy CORS para desbloquear enlaces HTTP/CORS">
+            <option value="AUTO">🌐 CORS: Auto-Fallback</option>
+            <option value="DIRECT">Directo (Sin Proxy)</option>
+            <option value="PROXY1">Proxy 1 (corsproxy.io)</option>
+            <option value="PROXY2">Proxy 2 (allorigins)</option>
+          </select>
+
+          <a id="directDownloadLink" class="btn-compact btn-download-sm" href="#" target="_blank" download style="display:none;">
+            ⬇ Descargar / Abrir MP4
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -765,15 +809,13 @@
 
   </div>
 
-  <!-- Script PWA e Inyección Dinámica de Manifest & Service Worker -->
+  <!-- Script PWA e Inyección Dinámica -->
   <script>
-    // Register PWA Manifest and ServiceWorker dynamically in single-file HTML
     (function setupPWA() {
-      // 1. Inyectar Manifest Web App
       const manifestObj = {
-        name: "Netflix IPTV Player",
-        short_name: "Netflix IPTV",
-        description: "Reproductor Web App de películas y listas M3U.",
+        name: "HacheTV IPTV Player",
+        short_name: "HacheTV IPTV",
+        description: "Reproductor Web App de películas y listas M3U al estilo HacheTV con desbloqueador CORS.",
         start_url: "./",
         display: "standalone",
         orientation: "any",
@@ -796,21 +838,13 @@
       linkTag.href = manifestUrl;
       document.head.appendChild(linkTag);
 
-      // 2. Inyectar y Registrar Service Worker inline via Blob
       if ('serviceWorker' in navigator) {
         const swCode = `
-          const CACHE_NAME = 'netflix-iptv-v1';
-          self.addEventListener('install', (evt) => {
-            self.skipWaiting();
-          });
-          self.addEventListener('activate', (evt) => {
-            evt.waitUntil(clients.claim());
-          });
+          const CACHE_NAME = 'HacheTV-iptv-v2';
+          self.addEventListener('install', (evt) => self.skipWaiting());
+          self.addEventListener('activate', (evt) => evt.waitUntil(clients.claim()));
           self.addEventListener('fetch', (evt) => {
-            // Estrategia Network-First con fallback a cache
-            evt.respondWith(
-              fetch(evt.request).catch(() => caches.match(evt.request))
-            );
+            evt.respondWith(fetch(evt.request).catch(() => caches.match(evt.request)));
           });
         `;
         const swBlob = new Blob([swCode], { type: 'text/javascript' });
@@ -819,9 +853,7 @@
       }
     })();
 
-    // Lógica de Eventos de Instalación PWA (beforeinstallprompt)
     let deferredPrompt = null;
-
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -833,15 +865,16 @@
       if (deferredPrompt) {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('El usuario aceptó instalar la PWA');
-          }
           deferredPrompt = null;
           document.getElementById('pwaInstallHeaderBtn').style.display = 'none';
           document.getElementById('pwaBanner').style.display = 'none';
         });
       } else {
-        alert('Para instalar en iOS (iPhone/iPad):\nToca el botón Compartir de Safari ➔ Selecciona "Agregar a inicio".\n\nEn Android/PC:\nUsa el menú del navegador ➔ "Instalar aplicación" o "Agregar a la pantalla principal".');
+        alert('Para instalar en iOS:
+Toca Compartir en Safari ➔ "Agregar a inicio".
+
+En Android/PC:
+Menú del navegador ➔ "Instalar aplicación".');
       }
     }
 
@@ -849,12 +882,20 @@
       document.getElementById('pwaBanner').style.display = 'none';
     }
 
-    // Configuración General del Reproductor y Catálogo
+    // Configuración General y Desbloqueador de Proxies CORS
     const DEFAULT_M3U = "https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u";
     let movies = [];
     let activeCategory = 'ALL';
     let hls = null;
     let currentMovie = null;
+    let currentProxyMode = 'AUTO'; // AUTO, DIRECT, PROXY1, PROXY2
+    let currentAttemptProxyIndex = 0;
+
+    const PROXY_SERVERS = [
+      { id: 'DIRECT', name: 'Directo', prefix: '' },
+      { id: 'PROXY1', name: 'Proxy CORS 1', prefix: 'https://corsproxy.io/?' },
+      { id: 'PROXY2', name: 'Proxy CORS 2', prefix: 'https://api.allorigins.win/raw?url=' }
+    ];
 
     const video = document.getElementById('videoPlayer');
     const playPauseBtn = document.getElementById('playPauseBtn');
@@ -862,7 +903,7 @@
     const seekBar = document.getElementById('seekBar');
     const muteBtn = document.getElementById('muteBtn');
 
-    // Parser de Formato M3U
+    // Parser de M3U
     function parseM3U(content) {
       const lines = content.split('\n');
       const items = [];
@@ -903,7 +944,7 @@
       return items;
     }
 
-    // Carga desde URL
+    // Carga de URL M3U con Fallback CORS Proxy
     async function loadM3uUrl() {
       const url = document.getElementById('m3uUrlInput').value.trim();
       if (!url) return;
@@ -916,25 +957,42 @@
         </div>
       `;
 
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Respuesta de red no válida');
-        const text = await res.text();
+      let text = null;
+
+      // Intentar directo y luego proxies
+      const fetchUrls = [
+        url,
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+      ];
+
+      for (const targetUrl of fetchUrls) {
+        try {
+          const res = await fetch(targetUrl);
+          if (res.ok) {
+            text = await res.text();
+            if (text && text.includes('#EXTM3U')) break;
+          }
+        } catch (e) {
+          console.log('Fetch attempt failed:', targetUrl);
+        }
+      }
+
+      if (text) {
         movies = parseM3U(text);
         buildCategoryPills();
         renderGrid(movies);
         if (movies.length > 0) setupHero(movies[0]);
-      } catch (err) {
+      } else {
         grid.innerHTML = `
           <div class="loading-state">
-            <p style="color: var(--netflix-red); font-weight: bold; margin-bottom: 8px;">No se pudo cargar la URL automáticamente (posible bloqueo CORS o red).</p>
+            <p style="color: var(--HacheTV-red); font-weight: bold; margin-bottom: 8px;">No se pudo obtener la lista desde la URL.</p>
             <p style="font-size: 0.85rem;">Puedes subir el archivo .m3u descargado directamente usando el botón "Subir .m3u".</p>
           </div>
         `;
       }
     }
 
-    // Carga desde archivo local
     function loadFromFile(evt) {
       const file = evt.target.files[0];
       if (!file) return;
@@ -949,7 +1007,6 @@
       reader.readAsText(file);
     }
 
-    // Generar Filtros de Categorías
     function buildCategoryPills() {
       const groups = ['ALL', ...new Set(movies.map(m => m.group || 'Películas'))];
       const container = document.getElementById('categoryPills');
@@ -964,7 +1021,6 @@
       });
     }
 
-    // Renderizar Grilla de Películas
     function renderGrid(items) {
       const grid = document.getElementById('moviesGrid');
       grid.innerHTML = '';
@@ -993,7 +1049,7 @@
             <button class="btn-compact btn-play-sm" onclick="playMovieByIndex(${idx})">
               ▶ Ver
             </button>
-            <a class="btn-compact btn-download-sm" href="${item.url}" target="_blank" download title="Descargar MP4 directamente">
+            <a class="btn-compact btn-download-sm" href="${item.url}" target="_blank" download title="Descargar o ver directamente">
               ⬇ MP4
             </a>
           </div>
@@ -1002,12 +1058,11 @@
       });
     }
 
-    // Configurar Hero Banner
     function setupHero(movie) {
       if (!movie) return;
       currentMovie = movie;
       document.getElementById('heroTitle').textContent = movie.title;
-      document.getElementById('heroDesc').textContent = `Categoría: ${movie.group} | Transmisión lista para reproductor integrado o descarga directa.`;
+      document.getElementById('heroDesc').textContent = `Categoría: ${movie.group} | Transmisión lista para reproductor integrado con proxy CORS o descarga directa.`;
       if (movie.logo) {
         document.getElementById('heroBackdrop').src = movie.logo;
       }
@@ -1023,37 +1078,98 @@
       if (movie) playMovie(movie);
     }
 
-    // Reproducción de Video
-    function playMovie(movie) {
+    function onProxySelectChange(val) {
+      currentProxyMode = val;
+      if (currentMovie) {
+        playMovie(currentMovie, 0);
+      }
+    }
+
+    function showProxyToast(msg) {
+      const toast = document.getElementById('proxyToast');
+      document.getElementById('proxyToastText').textContent = msg;
+      toast.style.display = 'flex';
+    }
+
+    // Reproducción Inteligente con Fallback de Proxy CORS
+    function playMovie(movie, attemptIndex = 0) {
       currentMovie = movie;
+      currentAttemptProxyIndex = attemptIndex;
+
       document.getElementById('nowPlayingTitle').textContent = `▶ Reproduciendo: ${movie.title}`;
-      
       const downloadBtn = document.getElementById('directDownloadLink');
       downloadBtn.href = movie.url;
       downloadBtn.style.display = 'inline-flex';
 
       document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
 
-      const url = movie.url;
+      // Determinar la URL según el modo de proxy
+      let targetUrl = movie.url;
+      let proxyName = "Directo";
 
-      if (Hls.isSupported() && (url.includes('.m3u8') || !url.includes('.mp4'))) {
-        if (hls) hls.destroy();
-        hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-        video.play();
+      if (currentProxyMode === 'AUTO') {
+        const currentProxy = PROXY_SERVERS[attemptIndex] || PROXY_SERVERS[0];
+        proxyName = currentProxy.name;
+        targetUrl = currentProxy.prefix ? currentProxy.prefix + encodeURIComponent(movie.url) : movie.url;
       } else {
-        video.src = url;
-        video.play();
+        const found = PROXY_SERVERS.find(p => p.id === currentProxyMode) || PROXY_SERVERS[0];
+        proxyName = found.name;
+        targetUrl = found.prefix ? found.prefix + encodeURIComponent(movie.url) : movie.url;
+      }
+
+      if (attemptIndex > 0 || currentProxyMode !== 'DIRECT') {
+        showProxyToast(`🌐 Conectando vía ${proxyName}... Si falla, usa "⬇ MP4" para reproducción directa.`);
+      } else {
+        document.getElementById('proxyToast').style.display = 'none';
+      }
+
+      // Inicializar Reproducción
+      if (Hls.isSupported() && (movie.url.includes('.m3u8') || !movie.url.includes('.mp4'))) {
+        if (hls) hls.destroy();
+        hls = new Hls({
+          manifestLoadingTimeOut: 10000,
+          fragLoadingTimeOut: 10000
+        });
+
+        hls.loadSource(targetUrl);
+        hls.attachMedia(video);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            handlePlaybackError(movie);
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = targetUrl;
+        video.play().catch(err => handlePlaybackError(movie));
+      } else {
+        video.src = targetUrl;
+        video.play().catch(err => handlePlaybackError(movie));
       }
 
       playPauseBtn.textContent = '⏸ Pausa';
     }
 
-    // Controles de Reproductor (Avanzar / Retroceder)
+    // Manejador de Errores con Reintento Automático en el Siguiente Proxy
+    function handlePlaybackError(movie) {
+      if (currentProxyMode === 'AUTO' && currentAttemptProxyIndex < PROXY_SERVERS.length - 1) {
+        const nextAttempt = currentAttemptProxyIndex + 1;
+        showProxyToast(`⚠️ Falló la conexión directa. Reintentando automáticamente con ${PROXY_SERVERS[nextAttempt].name}...`);
+        setTimeout(() => {
+          playMovie(movie, nextAttempt);
+        }, 1000);
+      } else {
+        showProxyToast(`🚨 No se pudo reproducir en la Web por bloqueos CORS del servidor. Haz clic en "⬇ Descargar / Abrir MP4" para verla directamente.`);
+      }
+    }
+
+    video.onerror = () => {
+      if (currentMovie) handlePlaybackError(currentMovie);
+    };
+
+    // Controles de Reproducción
     function togglePlayPause() {
       if (video.paused) {
         video.play();
@@ -1083,7 +1199,6 @@
       }
     }
 
-    // Eventos de Reproductor
     video.addEventListener('timeupdate', () => {
       if (!isNaN(video.duration) && video.duration > 0) {
         const progress = (video.currentTime / video.duration) * 100;
@@ -1107,14 +1222,12 @@
       return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // Filtros
     function filterCategory(group, element) {
       activeCategory = group;
       document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
       element.classList.add('active');
 
       document.getElementById('gridTitle').textContent = group === 'ALL' ? 'Catálogo Completo' : `Categoría: ${group}`;
-      
       const filtered = group === 'ALL' ? movies : movies.filter(m => m.group === group);
       renderGrid(filtered);
     }
@@ -1127,7 +1240,6 @@
       renderGrid(filtered);
     }
 
-    // Carga Inicial Automática
     window.addEventListener('DOMContentLoaded', () => {
       loadM3uUrl();
     });
