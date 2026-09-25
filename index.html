@@ -3,387 +3,961 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IPTV & M3U Web Player</title>
-  <!-- Soporte para flujos HLS (.m3u8) y MP4 -->
+  <title>Netflix IPTV Player</title>
+  <!-- HLS.js para reproducción de flujos .m3u8 / .mp4 -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <!-- Google Fonts: Montserrat & Roboto -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #121212;
+      --netflix-red: #E50914;
+      --netflix-dark-red: #B81D24;
+      --bg-black: #141414;
       --card-bg: #1f1f1f;
-      --card-hover: #2d2d2d;
-      --accent: #e50914;
-      --text-main: #ffffff;
-      --text-muted: #aaaaaa;
+      --card-hover: #2a2a2a;
+      --text-white: #ffffff;
+      --text-gray: #aaaaaa;
+      --border-gray: #333333;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      margin: 0;
-      padding: 20px;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-black);
+      color: var(--text-white);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 50px;
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
+    /* Navbar Estilo Netflix */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.8) 70%, transparent 100%);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 40px;
     }
 
-    .header h1 {
-      color: var(--accent);
-      margin-bottom: 5px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    /* Reproductor Principal */
-    .player-container {
-      max-width: 900px;
-      margin: 0 auto 25px auto;
+    .brand-logo {
+      color: var(--netflix-red);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.8rem;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .brand-badge {
+      background: rgba(229, 9, 20, 0.2);
+      color: var(--netflix-red);
+      border: 1px solid var(--netflix-red);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      letter-spacing: 1px;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid var(--border-gray);
+      color: #fff;
+      padding: 8px 14px 8px 36px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      width: 220px;
+      transition: all 0.3s ease;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--netflix-red);
+      width: 280px;
       background: #000;
-      border-radius: 8px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      color: var(--text-gray);
+    }
+
+    /* Hero Banner Principal */
+    .hero-container {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      background: #000;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      margin-bottom: 25px;
+      border-bottom: 1px solid #222;
+    }
+
+    .hero-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.35;
+      filter: blur(3px);
+      transform: scale(1.05);
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, var(--bg-black) 0%, rgba(20,20,20,0.6) 50%, rgba(20,20,20,0.9) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 30px 40px;
+    }
+
+    .hero-content {
+      max-width: 700px;
+      z-index: 2;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: var(--netflix-red);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 3px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .hero-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    }
+
+    .hero-desc {
+      color: var(--text-gray);
+      font-size: 0.9rem;
+      margin-bottom: 18px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Reproductor de Video con Controles Personalizados */
+    .player-wrapper {
+      max-width: 1100px;
+      margin: -60px auto 30px auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .player-card {
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+      border: 1px solid var(--border-gray);
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      background: #000;
+      aspect-ratio: 16/9;
+      max-height: 520px;
     }
 
     video {
       width: 100%;
-      max-height: 500px;
+      height: 100%;
       display: block;
-      outline: none;
+      object-fit: contain;
     }
 
-    .now-playing {
-      padding: 12px 18px;
+    /* Barra de Controles Personalizada para Avanzar / Retroceder */
+    .custom-controls {
       background: #181818;
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid #282828;
+    }
+
+    .control-group-left, .control-group-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .ctrl-btn:hover {
+      background: var(--netflix-red);
+      border-color: var(--netflix-red);
+      color: #fff;
+    }
+
+    .ctrl-btn-primary {
+      background: var(--netflix-red);
+      border-color: var(--netflix-red);
+    }
+
+    .ctrl-btn-primary:hover {
+      background: var(--netflix-dark-red);
+    }
+
+    .time-display {
+      font-size: 0.8rem;
+      color: var(--text-gray);
+      font-family: monospace;
+    }
+
+    .progress-bar-container {
+      flex: 1;
+      min-width: 150px;
+      display: flex;
+      align-items: center;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #333;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+      accent-color: var(--netflix-red);
+    }
+
+    .now-playing-bar {
+      padding: 10px 20px;
+      background: #101010;
+      border-top: 1px solid #222;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .now-playing-title {
-      font-weight: bold;
-      font-size: 1.1em;
+    .playing-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70%;
     }
 
-    /* Formulario de Carga */
-    .input-section {
-      max-width: 900px;
-      margin: 0 auto 20px auto;
-      background: var(--card-bg);
-      padding: 15px;
-      border-radius: 8px;
+    /* Categorías y Filtros */
+    .section-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .category-pills {
       display: flex;
-      flex-wrap: wrap;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--netflix-red) var(--bg-black);
+    }
+
+    .pill {
+      background: #222;
+      color: var(--text-gray);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .pill:hover, .pill.active {
+      background: var(--netflix-red);
+      color: #fff;
+      border-color: var(--netflix-red);
+    }
+
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
       gap: 10px;
     }
 
-    .input-section input[type="text"] {
-      flex: 1;
-      min-width: 250px;
-      padding: 10px;
-      border-radius: 4px;
-      border: 1px solid #333;
-      background: #121212;
-      color: #fff;
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      background: var(--netflix-red);
+      border-radius: 2px;
     }
 
-    .btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.2s;
-    }
-
-    .btn:hover {
-      background: #b80710;
-    }
-
-    .btn-secondary {
-      background: #333;
-    }
-
-    .btn-secondary:hover {
-      background: #444;
-    }
-
-    /* Buscador */
-    .search-bar {
-      max-width: 900px;
-      margin: 0 auto 20px auto;
-    }
-
-    .search-bar input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 4px;
-      border: 1px solid #333;
-      background: var(--card-bg);
-      color: #fff;
-      font-size: 1em;
-    }
-
-    /* Grilla de Contenido */
-    .grid-container {
-      max-width: 1200px;
-      margin: 0 auto;
+    /* Grilla de Películas / Tarjetas Compactas */
+    .movies-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
     }
 
-    .item-card {
+    .movie-card {
       background: var(--card-bg);
-      border-radius: 6px;
-      padding: 12px;
+      border-radius: 8px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: transform 0.2s, background 0.2s;
+      transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.25s ease;
+      border: 1px solid rgba(255,255,255,0.05);
+      position: relative;
     }
 
-    .item-card:hover {
+    .movie-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+      border-color: rgba(229, 9, 20, 0.4);
       background: var(--card-hover);
-      transform: translateY(-3px);
     }
 
-    .item-poster {
+    .poster-wrapper {
+      position: relative;
       width: 100%;
-      height: 120px;
-      object-fit: contain;
-      background: #121212;
-      border-radius: 4px;
-      margin-bottom: 10px;
+      padding-top: 135%; /* Proporción elegante tipo póster */
+      background: #0a0a0a;
+      overflow: hidden;
     }
 
-    .item-title {
-      font-size: 0.95em;
+    .movie-poster {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .movie-card:hover .movie-poster {
+      transform: scale(1.05);
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      font-size: 0.65rem;
       font-weight: 600;
-      margin-bottom: 6px;
-      line-height: 1.2;
+      padding: 2px 6px;
+      border-radius: 4px;
+      backdrop-filter: blur(4px);
+    }
+
+    .card-details {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-grow: 1;
+    }
+
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      height: 2.5em;
+    }
+
+    .card-group {
+      font-size: 0.7rem;
+      color: var(--text-gray);
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
-    .item-group {
-      font-size: 0.75em;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-    }
-
-    .card-actions {
+    /* Botones Sutiles y Compactos (No Gigantes) */
+    .card-buttons {
       display: flex;
       gap: 6px;
+      padding: 8px 10px 10px 10px;
     }
 
-    .card-actions .btn {
+    .btn-compact {
       flex: 1;
-      padding: 6px 8px;
-      font-size: 0.8em;
-      text-align: center;
+      padding: 5px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
       text-decoration: none;
+      transition: background 0.2s, transform 0.1s;
     }
 
-    .btn-download {
+    .btn-compact:active {
+      transform: scale(0.96);
+    }
+
+    .btn-play-sm {
+      background: var(--netflix-red);
+      color: #fff;
+    }
+
+    .btn-play-sm:hover {
+      background: var(--netflix-dark-red);
+    }
+
+    .btn-download-sm {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ddd;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-download-sm:hover {
       background: #28a745;
+      color: #fff;
+      border-color: #28a745;
     }
 
-    .btn-download:hover {
-      background: #218838;
+    /* Modal / Formulario Colapsable de Fuentes */
+    .source-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border-gray);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .source-box input {
+      flex: 1;
+      min-width: 240px;
+      background: #121212;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* Mensajes y Carga */
+    .loading-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-gray);
+    }
+
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top: 3px solid var(--netflix-red);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 15px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .navbar { padding: 12px 16px; }
+      .hero-container { height: 320px; }
+      .hero-title { font-size: 1.5rem; }
+      .hero-overlay { padding: 20px; }
+      .player-wrapper { margin-top: -30px; padding: 0 10px; }
+      .movies-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+      .search-box input { width: 140px; }
+      .search-box input:focus { width: 180px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>🎬 Reproductor IPTV & M3U</h1>
-    <p style="color: var(--text-muted)">Catálogo de películas precargado automáticamente.</p>
-  </div>
+  <!-- Navegación Superior -->
+  <nav class="navbar">
+    <div class="brand">
+      <a href="#" class="brand-logo">NETFLIX</a>
+      <span class="brand-badge">IPTV OTT</span>
+    </div>
+    <div class="nav-controls">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar película..." oninput="filterMovies()">
+      </div>
+    </div>
+  </nav>
 
-  <!-- Sección del Reproductor -->
-  <div class="player-container" id="playerContainer">
-    <video id="videoPlayer" controls></video>
-    <div class="now-playing">
-      <span class="now-playing-title" id="currentTitle">Selecciona una película para iniciar la reproducción</span>
+  <!-- Hero Banner Principal (Destacado) -->
+  <section class="hero-container" id="heroBanner">
+    <img id="heroBackdrop" class="hero-backdrop" src="https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=1200" alt="Backdrop">
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <span class="hero-tag">PELÍCULA DESTACADA</span>
+        <h2 class="hero-title" id="heroTitle">Catálogo de Películas Netflix</h2>
+        <p class="hero-desc" id="heroDesc">Disfruta de cientos de títulos de alta calidad en formato MP4 / HLS con reproductor integrado y descarga directa.</p>
+        <div class="hero-actions">
+          <button class="ctrl-btn ctrl-btn-primary" id="heroPlayBtn" onclick="playCurrentHero()">
+            ▶ Reproducción
+          </button>
+          <a class="ctrl-btn" id="heroDownloadBtn" href="#" target="_blank" download>
+            ⬇ Descargar MP4
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reproductor de Video Integrado -->
+  <div class="player-wrapper" id="playerSection">
+    <div class="player-card">
+      <div class="video-container">
+        <video id="videoPlayer" poster="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000"></video>
+      </div>
+
+      <!-- Barra de Controles Avanzados (Avanzar/Retroceder) -->
+      <div class="custom-controls">
+        <div class="control-group-left">
+          <button class="ctrl-btn ctrl-btn-primary" onclick="togglePlayPause()" id="playPauseBtn">
+            ▶ Reproducir
+          </button>
+          <!-- Controles de Avanzar y Retroceder -->
+          <button class="ctrl-btn" onclick="seekRelative(-10)" title="Retroceder 10 segundos">
+            ⏪ -10s
+          </button>
+          <button class="ctrl-btn" onclick="seekRelative(10)" title="Avanzar 10 segundos">
+            ⏩ +10s
+          </button>
+          <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+        </div>
+
+        <div class="progress-bar-container">
+          <input type="range" id="seekBar" class="progress-bar" value="0" min="0" step="0.1" oninput="onSeekInput()">
+        </div>
+
+        <div class="control-group-right">
+          <button class="ctrl-btn" onclick="toggleMute()" id="muteBtn">
+            🔊
+          </button>
+          <button class="ctrl-btn" onclick="toggleFullscreen()">
+            ⛶ Pantalla Completa
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra Informativa del Contenido Actual -->
+      <div class="now-playing-bar">
+        <span class="playing-title" id="nowPlayingTitle">Selecciona una película para reproducir</span>
+        <a id="directDownloadLink" class="btn-compact btn-download-sm" href="#" target="_blank" download style="display:none;">
+          ⬇ Descargar MP4
+        </a>
+      </div>
     </div>
   </div>
 
-  <!-- Carga de Lista (URL Precargada) -->
-  <div class="input-section">
-    <input type="text" id="m3uUrl" value="https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u" placeholder="Pega la URL de tu lista .m3u o .m3u8 aquí...">
-    <button class="btn" onclick="loadFromUrl()">Recargar URL</button>
-    <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt" style="display:none" onchange="loadFromFile(event)">
-    <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Subir Archivo</button>
-  </div>
+  <!-- Contenedor Principal de Catálogo -->
+  <div class="section-container">
 
-  <!-- Barra de Búsqueda -->
-  <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="🔍 Buscar película o categoría..." oninput="filterItems()">
-  </div>
+    <!-- Cuadro de Fuente M3U / M3U8 -->
+    <div class="source-box">
+      <span style="font-size:0.85rem; color:var(--text-gray); font-weight:600;">Fuente M3U:</span>
+      <input type="text" id="m3uUrlInput" value="https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u">
+      <button class="btn-compact btn-play-sm" onclick="loadM3uUrl()" style="padding: 8px 14px;">Recargar URL</button>
+      <input type="file" id="filePicker" accept=".m3u,.m3u8,.txt" style="display:none" onchange="loadFromFile(event)">
+      <button class="btn-compact btn-download-sm" onclick="document.getElementById('filePicker').click()" style="padding: 8px 14px;">Subir .m3u</button>
+    </div>
 
-  <!-- Grilla de Películas -->
-  <div class="grid-container" id="playlistGrid">
-    <p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">
-      Cargando catálogo automáticamente...
-    </p>
+    <!-- Filtros por Categoría -->
+    <div class="category-pills" id="categoryPills">
+      <div class="pill active" onclick="filterCategory('ALL', this)">Todas las Películas</div>
+    </div>
+
+    <!-- Título de Sección -->
+    <h3 class="section-title" id="gridTitle">Catálogo Completo</h3>
+
+    <!-- Grilla de Películas -->
+    <div class="movies-grid" id="moviesGrid">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando catálogo de películas desde Hugging Face...</p>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    let parsedItems = [];
-    let hlsInstance = null;
+    // Configuración y Variables de Estado
+    const DEFAULT_M3U = "https://huggingface.co/datasets/Hachetv/BOTtelegram/raw/main/hf_peliculas.m3u";
+    let movies = [];
+    let activeCategory = 'ALL';
+    let hls = null;
+    let currentMovie = null;
 
-    // Parser de listas M3U
+    const video = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const seekBar = document.getElementById('seekBar');
+    const muteBtn = document.getElementById('muteBtn');
+
+    // Parser de Formato M3U
     function parseM3U(content) {
       const lines = content.split('\n');
       const items = [];
-      let currentItem = null;
+      let current = null;
 
       const metadataRegex = /#EXTINF:-1(?:\s+tvg-id="([^"]*)")?(?:\s+tvg-name="([^"]*)")?(?:\s+tvg-logo="([^"]*)")?(?:\s+group-title="([^"]*)")?,(.*)/i;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        
         if (line.startsWith('#EXTINF')) {
           const match = line.match(metadataRegex);
           if (match) {
-            currentItem = {
+            current = {
               id: match[1] || '',
-              name: match[5] || match[2] || 'Sin título',
+              title: match[5] ? match[5].trim() : (match[2] || 'Película sin título'),
               logo: match[3] || '',
-              group: match[4] || 'Películas',
+              group: match[4] ? match[4].trim() : 'Películas',
               url: ''
             };
           } else {
-            const nameParts = line.split(',');
-            currentItem = {
+            const parts = line.split(',');
+            current = {
               id: '',
-              name: nameParts.length > 1 ? nameParts[1] : 'Sin título',
+              title: parts.length > 1 ? parts[1].trim() : 'Película sin título',
               logo: '',
               group: 'Películas',
               url: ''
             };
           }
         } else if (line.length > 0 && !line.startsWith('#')) {
-          if (currentItem) {
-            currentItem.url = line;
-            items.push(currentItem);
-            currentItem = null;
+          if (current) {
+            current.url = line;
+            items.push(current);
+            current = null;
           }
         }
       }
       return items;
     }
 
-    // Cargar desde URL
-    async function loadFromUrl() {
-      const url = document.getElementById('m3uUrl').value.trim();
-      if (!url) return alert('Por favor ingresa una URL válida.');
+    // Carga desde URL
+    async function loadM3uUrl() {
+      const url = document.getElementById('m3uUrlInput').value.trim();
+      if (!url) return;
 
-      const container = document.getElementById('playlistGrid');
-      container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Cargando catálogo...</p>';
+      const grid = document.getElementById('moviesGrid');
+      grid.innerHTML = `
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Conectando y analizando lista M3U...</p>
+        </div>
+      `;
 
       try {
-        const response = await fetch(url);
-        const text = await response.text();
-        parsedItems = parseM3U(text);
-        renderGrid(parsedItems);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Respuesta de red no válida');
+        const text = await res.text();
+        movies = parseM3U(text);
+        buildCategoryPills();
+        renderGrid(movies);
+        if (movies.length > 0) setupHero(movies[0]);
       } catch (err) {
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--accent);">Error al cargar la lista desde la URL. Verifica la conexión o políticas CORS.</p>';
+        grid.innerHTML = `
+          <div class="loading-state">
+            <p style="color: var(--netflix-red); font-weight: bold; margin-bottom: 8px;">No se pudo cargar la URL automáticamente (posible bloqueo CORS o red).</p>
+            <p style="font-size: 0.85rem;">Puedes subir el archivo .m3u descargado directamente usando el botón "Subir .m3u".</p>
+          </div>
+        `;
       }
     }
 
-    // Cargar desde archivo local
-    function loadFromFile(event) {
-      const file = event.target.files[0];
+    // Carga desde archivo local
+    function loadFromFile(evt) {
+      const file = evt.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = function(e) {
-        parsedItems = parseM3U(e.target.result);
-        renderGrid(parsedItems);
+        movies = parseM3U(e.target.result);
+        buildCategoryPills();
+        renderGrid(movies);
+        if (movies.length > 0) setupHero(movies[0]);
       };
       reader.readAsText(file);
     }
 
-    // Renderizar grilla de elementos
-    function renderGrid(items) {
-      const container = document.getElementById('playlistGrid');
+    // Generar Filtros de Categorías
+    function buildCategoryPills() {
+      const groups = ['ALL', ...new Set(movies.map(m => m.group || 'Películas'))];
+      const container = document.getElementById('categoryPills');
       container.innerHTML = '';
 
-      if (items.length === 0) {
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No se encontraron contenidos válidos.</p>';
-        return;
-      }
-
-      items.forEach((item) => {
-        const card = document.createElement('div');
-        card.className = 'item-card';
-
-        const logoSrc = item.logo || 'https://via.placeholder.com/200x120/1e1e1e/ffffff?text=Pelicula';
-
-        card.innerHTML = `
-          <div>
-            <img class="item-poster" src="${logoSrc}" onerror="this.src='https://via.placeholder.com/200x120/1e1e1e/ffffff?text=Pelicula'" alt="${item.name}">
-            <div class="item-title" title="${item.name}">${item.name}</div>
-            <div class="item-group">${item.group}</div>
-          </div>
-          <div class="card-actions">
-            <button class="btn" onclick="playMedia('${encodeURIComponent(item.url)}', '${encodeURIComponent(item.name)}')">▶ Ver</button>
-            <a href="${item.url}" target="_blank" download class="btn btn-download">⬇ Descargar</a>
-          </div>
-        `;
-        container.appendChild(card);
+      groups.forEach(grp => {
+        const pill = document.createElement('div');
+        pill.className = `pill ${grp === 'ALL' ? 'active' : ''}`;
+        pill.textContent = grp === 'ALL' ? 'Todas las Películas' : grp;
+        pill.onclick = () => filterCategory(grp, pill);
+        container.appendChild(pill);
       });
     }
 
-    // Filtrar la lista
-    function filterItems() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      const filtered = parsedItems.filter(item => 
-        item.name.toLowerCase().includes(query) || item.group.toLowerCase().includes(query)
-      );
-      renderGrid(filtered);
+    // Renderizar Grilla de Películas (Botones Compactos y Elegantes)
+    function renderGrid(items) {
+      const grid = document.getElementById('moviesGrid');
+      grid.innerHTML = '';
+
+      if (items.length === 0) {
+        grid.innerHTML = '<div class="loading-state"><p>No se encontraron resultados para esta búsqueda.</p></div>';
+        return;
+      }
+
+      items.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+
+        const posterSrc = item.logo || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=400';
+
+        card.innerHTML = `
+          <div class="poster-wrapper">
+            <img class="movie-poster" src="${posterSrc}" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=400'" alt="${item.title}" loading="lazy">
+            <span class="card-badge">HD</span>
+          </div>
+          <div class="card-details">
+            <div class="card-title" title="${item.title}">${item.title}</div>
+            <div class="card-group">${item.group}</div>
+          </div>
+          <div class="card-buttons">
+            <button class="btn-compact btn-play-sm" onclick="playMovieByIndex(${idx})">
+              ▶ Ver
+            </button>
+            <a class="btn-compact btn-download-sm" href="${item.url}" target="_blank" download title="Descargar MP4 directamente">
+              ⬇ MP4
+            </a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
     }
 
-    // Reproducir Video
-    function playMedia(encodedUrl, encodedName) {
-      const url = decodeURIComponent(encodedUrl);
-      const name = decodeURIComponent(encodedName);
-      const video = document.getElementById('videoPlayer');
-      const titleLabel = document.getElementById('currentTitle');
+    // Configurar Hero Banner
+    function setupHero(movie) {
+      if (!movie) return;
+      currentMovie = movie;
+      document.getElementById('heroTitle').textContent = movie.title;
+      document.getElementById('heroDesc').textContent = `Categoría: ${movie.group} | Transmisión lista para reproductor integrado o descarga directa.`;
+      if (movie.logo) {
+        document.getElementById('heroBackdrop').src = movie.logo;
+      }
+      document.getElementById('heroDownloadBtn').href = movie.url;
+    }
 
-      titleLabel.textContent = name;
+    function playCurrentHero() {
+      if (currentMovie) playMovie(currentMovie);
+    }
 
-      // Desplazar suavemente hacia el reproductor
-      document.getElementById('playerContainer').scrollIntoView({ behavior: 'smooth' });
+    function playMovieByIndex(idx) {
+      const movie = (activeCategory === 'ALL') ? movies[idx] : movies.filter(m => m.group === activeCategory)[idx];
+      if (movie) playMovie(movie);
+    }
+
+    // Reproducción de Video
+    function playMovie(movie) {
+      currentMovie = movie;
+      document.getElementById('nowPlayingTitle').textContent = `▶ Reproduciendo: ${movie.title}`;
+      
+      const downloadBtn = document.getElementById('directDownloadLink');
+      downloadBtn.href = movie.url;
+      downloadBtn.style.display = 'inline-flex';
+
+      // Desplazamiento suave al reproductor
+      document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+
+      const url = movie.url;
 
       if (Hls.isSupported() && (url.includes('.m3u8') || !url.includes('.mp4'))) {
-        if (hlsInstance) hlsInstance.destroy();
-        hlsInstance = new Hls();
-        hlsInstance.loadSource(url);
-        hlsInstance.attachMedia(video);
-        hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
-          video.play();
-        });
+        if (hls) hls.destroy();
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
-        video.addEventListener('loadedmetadata', function() {
-          video.play();
-        });
+        video.play();
       } else {
         video.src = url;
         video.play();
       }
+
+      playPauseBtn.textContent = '⏸ Pausa';
     }
 
-    // Carga automática inmediata al abrir la página
+    // Controles de Reproductor (Avanzar y Retroceder)
+    function togglePlayPause() {
+      if (video.paused) {
+        video.play();
+        playPauseBtn.textContent = '⏸ Pausa';
+      } else {
+        video.pause();
+        playPauseBtn.textContent = '▶ Reproducir';
+      }
+    }
+
+    function seekRelative(seconds) {
+      if (!video) return;
+      const targetTime = video.currentTime + seconds;
+      video.currentTime = Math.max(0, Math.min(video.duration || 0, targetTime));
+    }
+
+    function toggleMute() {
+      video.muted = !video.muted;
+      muteBtn.textContent = video.muted ? '🔇' : '🔊';
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        video.requestFullscreen().catch(err => alert('No se pudo activar pantalla completa'));
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Eventos de Reproductor
+    video.addEventListener('timeupdate', () => {
+      if (!isNaN(video.duration) && video.duration > 0) {
+        const progress = (video.currentTime / video.duration) * 100;
+        seekBar.value = progress;
+        timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+      }
+    });
+
+    video.addEventListener('play', () => playPauseBtn.textContent = '⏸ Pausa');
+    video.addEventListener('pause', () => playPauseBtn.textContent = '▶ Reproducir');
+
+    function onSeekInput() {
+      if (!isNaN(video.duration) && video.duration > 0) {
+        video.currentTime = (seekBar.value / 100) * video.duration;
+      }
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Filtros
+    function filterCategory(group, element) {
+      activeCategory = group;
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      element.classList.add('active');
+
+      document.getElementById('gridTitle').textContent = group === 'ALL' ? 'Catálogo Completo' : `Categoría: ${group}`;
+      
+      const filtered = group === 'ALL' ? movies : movies.filter(m => m.group === group);
+      renderGrid(filtered);
+    }
+
+    function filterMovies() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = movies.filter(m => 
+        m.title.toLowerCase().includes(query) || (m.group && m.group.toLowerCase().includes(query))
+      );
+      renderGrid(filtered);
+    }
+
+    // Carga Inicial Automática al Cargar la Página
     window.addEventListener('DOMContentLoaded', () => {
-      loadFromUrl();
+      loadM3uUrl();
     });
   </script>
 </body>
